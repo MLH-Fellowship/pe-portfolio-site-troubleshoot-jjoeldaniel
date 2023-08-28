@@ -44,45 +44,50 @@ mydb.connect()
 mydb.create_tables([TimelinePost])
 
 
+def check_errors(form: dict):
+    errors = []
+    if "name" not in form or len(form["name"].strip()) < 1:
+        errors.append("Invalid name")
+    if (
+        "email" not in form
+        or len(form["email"].strip()) < 1
+        or "@" not in form["email"]
+    ):
+        errors.append("Invalid email")
+    if "content" not in form or len(form["content"].strip()) < 1:
+        errors.append("Invalid content")
+    return errors
+
+
 @app.route("/")
 def index():
-    return render_template("index.html", title="MLH Fellow", url=os.getenv("URL"))
+    return render_template("index.html", title="MLH Fellow", url=os.getenv("URL")), 200
 
 
 @app.route("/timeline")
 def timeline():
-    return render_template("timeline.html", title="Timeline", url=os.getenv("URL"))
+    return render_template("timeline.html", title="Timeline", url=os.getenv("URL")), 200
 
 
 @app.route("/api/timeline_post", methods=["POST"])
-def post_time_line_post():
-    if "name" not in request.form or request.form["name"] == "":
-        return "Invalid name", 400
+def api_post_time_line_post():
+    errors = check_errors(request.form)
+    if errors:
+        return {"errors": errors}, 400
 
-    if (
-        "email" not in request.form
-        or request.form["email"] == ""
-        or "@" not in request.form["email"]
-    ):
-        return "Invalid email", 400
-
-    if "content" not in request.form or request.form["content"] == "":
-        return "Invalid content", 400
-
-    name = request.form["name"]
-    email = request.form["email"]
-    content = request.form["content"]
+    name = request.form["name"].strip()
+    email = request.form["email"].strip()
+    content = request.form["content"].strip()
 
     timeline_post = TimelinePost.create(name=name, email=email, content=content)
-
-    return model_to_dict(timeline_post)
+    return model_to_dict(timeline_post), 200
 
 
 @app.route("/api/timeline_post", methods=["GET"])
-def get_time_line_post():
+def get_timeline_post():
     return {
         "timeline_posts": [
             model_to_dict(p)
             for p in TimelinePost.select().order_by(TimelinePost.created_at.desc())
         ]
-    }
+    }, 200
