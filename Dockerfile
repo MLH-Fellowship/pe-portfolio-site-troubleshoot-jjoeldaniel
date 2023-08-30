@@ -1,6 +1,6 @@
-FROM scratch
+FROM python:3.9-slim-buster
 
-WORKDIR /myportfolio
+WORKDIR ./
 
 COPY requirements.txt .
 
